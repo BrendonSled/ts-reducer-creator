@@ -1,6 +1,3 @@
-import {OperatorFunction} from "rxjs"
-import {filter} from "rxjs/operators"
-
 export interface Action<TPayload> {
   type: string
   payload: TPayload
@@ -27,10 +24,6 @@ export type ActionCreators<TActions> = {
 
 export type ActionTypes<TActions> = {[key in keyof TActions]: string}
 
-export type ActionOfTypes<TActions> = {
-  [key in keyof TActions]: OperatorFunction<Action<any>, Action<TActions[key]>>
-}
-
 function actionCreator<TPayload>(type: string): ActionCreator<TPayload> {
   return ((payload: TPayload) => ({
     type,
@@ -49,11 +42,9 @@ export function createHelpers<TState, TActions>(
 ): {
   reducer: Reducer<TState>
   actionCreators: ActionCreators<TActions>
-  ofTypeFilters: ActionOfTypes<TActions>
   actionTypes: ActionTypes<TActions>
 } {
   const actionCreators: Record<keyof TActions, any> = {} as any
-  const ofTypeFilters: Record<keyof TActions, any> = {} as any
   const actionTypes: Record<keyof TActions, any> = {} as any
   const fullTypeHandlers: Record<string, any> = {}
 
@@ -63,7 +54,6 @@ export function createHelpers<TState, TActions>(
   keys(handlers).forEach(key => {
     const fullType = createFullType(key)
     actionCreators[key] = actionCreator(fullType)
-    ofTypeFilters[key] = filter((x: Action<any>) => x.type === fullType)
     actionTypes[key] = fullType
     fullTypeHandlers[fullType] = handlers[key]
   })
@@ -75,5 +65,5 @@ export function createHelpers<TState, TActions>(
       : state || initialState
   }
 
-  return {reducer, actionCreators, ofTypeFilters, actionTypes}
+  return {reducer, actionCreators, actionTypes}
 }
